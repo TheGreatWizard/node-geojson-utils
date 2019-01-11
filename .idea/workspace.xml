@@ -2,9 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="44887b25-f08d-4b58-884c-86fbb57fcbf1" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/geojsonlib.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/test/test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/test.js" beforeDir="false" afterPath="$PROJECT_DIR$/test/test.js" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/.tmp/" />
     <ignored path="$PROJECT_DIR$/temp/" />
@@ -27,6 +26,7 @@
         <counts>
           <entry key="js" value="2" />
           <entry key="json" value="2" />
+          <entry key="md" value="1" />
           <entry key="ts" value="1" />
         </counts>
       </usages-collector>
@@ -34,30 +34,45 @@
         <counts>
           <entry key="JSON" value="2" />
           <entry key="JavaScript" value="2" />
+          <entry key="Markdown" value="1" />
           <entry key="TypeScript" value="1" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
-          <entry key="js" value="3035" />
+          <entry key="js" value="3092" />
           <entry key="json" value="23" />
+          <entry key="md" value="711" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
           <entry key="JSON" value="23" />
-          <entry key="JavaScript" value="3035" />
+          <entry key="JavaScript" value="3092" />
+          <entry key="Markdown" value="711" />
         </counts>
       </usages-collector>
     </session>
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/geojsonlib.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="459">
-              <caret line="48" column="58" lean-forward="true" selection-start-line="48" selection-start-column="58" selection-end-line="48" selection-end-column="58" />
+            <state relative-caret-position="34">
+              <caret line="14" lean-forward="true" selection-start-line="14" selection-end-line="14" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/README.md">
+          <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+            <state split_layout="SPLIT">
+              <first_editor relative-caret-position="329">
+                <caret line="42" lean-forward="true" selection-start-line="42" selection-end-line="42" />
+              </first_editor>
+              <second_editor />
             </state>
           </provider>
         </entry>
@@ -65,8 +80,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/test/test.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="62">
-              <caret line="45" column="3" lean-forward="true" selection-start-line="45" selection-start-column="3" selection-end-line="45" selection-end-column="3" />
+            <state relative-caret-position="272">
+              <caret line="61" column="62" lean-forward="true" selection-start-line="49" selection-start-column="7" selection-end-line="61" selection-end-column="62" />
               <folding>
                 <element signature="e#2249#2736#0" />
                 <element signature="e#3082#3804#0" />
@@ -109,8 +124,9 @@
       <list>
         <option value="$PROJECT_DIR$/tests/test.js" />
         <option value="$PROJECT_DIR$/package.json" />
-        <option value="$PROJECT_DIR$/test/test.js" />
         <option value="$PROJECT_DIR$/geojsonlib.js" />
+        <option value="$PROJECT_DIR$/test/test.js" />
+        <option value="$PROJECT_DIR$/README.md" />
       </list>
     </option>
   </component>
@@ -177,7 +193,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Mocha.test\test.js">
+  <component name="RunManager" selected="Mocha.lineStringLength.calculate length">
     <configuration default="true" type="mocha-javascript-test-runner" factoryName="Mocha">
       <node-interpreter>project</node-interpreter>
       <node-options />
@@ -282,8 +298,8 @@
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Mocha.test\test.js" />
         <item itemvalue="Mocha.lineStringLength.calculate length" />
+        <item itemvalue="Mocha.test\test.js" />
         <item itemvalue="Mocha.distanceCoordsToCoords.correct type" />
         <item itemvalue="Mocha.distanceCoordsToCoords.correct length 1" />
         <item itemvalue="Mocha.validate" />
@@ -303,14 +319,11 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1547184800402</updated>
-      <workItem from="1547184801826" duration="21828000" />
+      <workItem from="1547184801826" duration="22947000" />
     </task>
     <servers />
   </component>
   <component name="TestHistory">
-    <history-entry file="lineStringLength_calculate_length - 2019.01.11 at 14h 37m 13s.xml">
-      <configuration name="lineStringLength.calculate length" configurationId="mocha-javascript-test-runner" />
-    </history-entry>
     <history-entry file="distanceCoordsToCoords_correct_length_1 - 2019.01.11 at 14h 37m 59s.xml">
       <configuration name="distanceCoordsToCoords.correct length 1" configurationId="mocha-javascript-test-runner" />
     </history-entry>
@@ -338,24 +351,26 @@
     <history-entry file="test_test_js - 2019.01.11 at 14h 57m 07s.xml">
       <configuration name="test\test.js" configurationId="mocha-javascript-test-runner" />
     </history-entry>
+    <history-entry file="lineStringLength_calculate_length - 2019.01.11 at 15h 16m 31s.xml">
+      <configuration name="lineStringLength.calculate length" configurationId="mocha-javascript-test-runner" />
+    </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="21828000" />
+    <option name="totallyTimeSpent" value="22947000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1616" height="876" extended-state="6" />
-    <editor active="true" />
     <layout>
       <window_info id="Favorites" side_tool="true" />
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.49898168" visible="true" weight="0.24968314" />
-      <window_info id="Structure" order="1" sideWeight="0.50101835" side_tool="true" visible="true" weight="0.24968314" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.49799198" visible="true" weight="0.24968314" />
+      <window_info id="Structure" order="1" sideWeight="0.502008" side_tool="true" visible="true" weight="0.24968314" />
       <window_info anchor="bottom" id="Docker" show_stripe_button="false" />
       <window_info anchor="bottom" id="Version Control" show_stripe_button="false" />
-      <window_info anchor="bottom" id="Terminal" weight="0.32974428" />
+      <window_info active="true" anchor="bottom" id="Terminal" visible="true" weight="0.32974428" />
       <window_info anchor="bottom" id="Event Log" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.33916554" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.33916554" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.23014805" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -386,10 +401,17 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/geojsonlib.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="34">
+          <caret line="14" lean-forward="true" selection-start-line="14" selection-end-line="14" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/test/test.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="62">
-          <caret line="45" column="3" lean-forward="true" selection-start-line="45" selection-start-column="3" selection-end-line="45" selection-end-column="3" />
+        <state relative-caret-position="272">
+          <caret line="61" column="62" lean-forward="true" selection-start-line="49" selection-start-column="7" selection-end-line="61" selection-end-column="62" />
           <folding>
             <element signature="e#2249#2736#0" />
             <element signature="e#3082#3804#0" />
@@ -397,10 +419,13 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/geojsonlib.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="459">
-          <caret line="48" column="58" lean-forward="true" selection-start-line="48" selection-start-column="58" selection-end-line="48" selection-end-column="58" />
+    <entry file="file://$PROJECT_DIR$/README.md">
+      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+        <state split_layout="SPLIT">
+          <first_editor relative-caret-position="329">
+            <caret line="42" lean-forward="true" selection-start-line="42" selection-end-line="42" />
+          </first_editor>
+          <second_editor />
         </state>
       </provider>
     </entry>
