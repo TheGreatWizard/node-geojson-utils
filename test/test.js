@@ -58,7 +58,7 @@ describe('lineStringLength', function () {
             (gsl.distanceCoordsToCoords([63.074865, 79.453125], [47.517204, 45.3515625])) +
             (gsl.distanceCoordsToCoords([47.517204, 45.3515625], [46.316584, 5.9765625])));
 
-
+        console.log('The length of the LineString is', gsl.lineStringLength(line),'m');
         assert.equal(gsl.lineStringLength(line), 7721785.168);
     });
 })
