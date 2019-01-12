@@ -1,5 +1,6 @@
 var assert = require('assert');
 var gsl = require('../geojsonlib');
+var prl = require('../privatelib');
 describe('validate', function () {
     it('correct point', function () {
         var pnt = {
@@ -45,33 +46,122 @@ describe('validate', function () {
 
 });
 describe('polygonArea', function () {
+    it('calculate area', function () {
+        this.timeout(10000);
+        var precision = 10;
+        var correctArea = gsl.areaUnderEdge([[0, 30], [1, 31]], 0, 1e-8);
+        var pr = [0.1, 0.01, 0.001, 0.0001];
+        for (var k = 0; k < pr.length; k++) {
+            precision = pr[k];
+            var area = gsl.areaUnderEdge([[0, 30], [1, 31]], 0, precision);
+            console.log(precision, correctArea - area, area);
+            // assert.equal(Math.round(area / precision) * precision,
+            //     Math.round(6154925593 / precision) * precision);
+        }
+
+
+    });
+    it('calculate recursive', function () {
+        var areaUnderGeodesic = function (phi0, phi1, lam1, phi2, lam2, alpha1, l, p) {
+            var maxArea = gsl.extentArea([lam1 * 180 / Math.PI, phi0 * 180 / Math.PI, lam2 * 180 / Math.PI, phi2 * 180 / Math.PI]);
+            var minArea = gsl.extentArea([lam1 * 180 / Math.PI, phi0 * 180 / Math.PI, lam2 * 180 / Math.PI, phi1 * 180 / Math.PI]);
+            var deltaArea = maxArea - minArea;
+            if (deltaArea / 2 < p) {
+                //console.log("ok", "p:", p, "l:", l, "d:", deltaArea, "df:", (phi2 - phi1) * Math.PI / 180, "dl:", (lam2 - lam1) * Math.PI / 180);
+                var bestArea = (maxArea + minArea) / 2;
+                return bestArea;
+            } else {
+                // console.log("st", "p:", p, "l:", l, "d:", deltaArea, "df:", (phi2 - phi1) * Math.PI / 180, "dl:", (lam2 - lam1) * Math.PI / 180);
+                //d2 = gsl.vincentyBackward(phi1, phi2, lam2 - lam1);
+                //console.log('s:', d2[0], 'az', d2[1], alpha1);
+                //var s, fwdAz, revAz];
+                //
+
+                d = prl.vincentyForward(phi1, lam1, alpha1, l / 2);
+                var phiM = d[0];
+                var lamM = d[1];
+                var alpha2 = d[2];//(d[2] + Math.PI) % (2 * Math.PI);
+                if (!((phi1 < phiM) && (phiM < phi2))) {
+                    throw new Error('bad phi', phi1 * Math.PI / 180, phiM * Math.PI / 180, phi2 * Math.PI / 180);
+                }
+                var A1 = areaUnderGeodesic(phi0, phi1, lam1, phiM, lamM, alpha1, l / 2, p / 2);
+                var A2 = areaUnderGeodesic(phi0, phiM, lamM, phi2, lam2, alpha2, l / 2, p / 2);
+                return A1 + A2;
+            }
+        }
+        var phi1 = 0 * Math.PI / 180;
+        var lam1 = 0 * Math.PI / 180;
+        var phi2 = 10 * Math.PI / 180;
+        var lam2 = 10 * Math.PI / 180;
+        d2 = prl.vincentyBackward(phi1, phi2, lam2 - lam1);
+        // var step = d2[0] / n;
+        // console.log("step:", step);
+        var l = d2[0];
+        var fwdAz = d2[1];
+
+        var precision = 1000000;
+        var S = areaUnderGeodesic(0, phi1, lam1, phi2, lam2, fwdAz, l, precision);
+        var S1 = gsl.extentArea([lam1 * 180 / Math.PI, 0, lam2 * 180 / Math.PI, phi2 * 180 / Math.PI]);
+        console.log("The area is", S, S1);
+        //console.log("The error", S - 188919109);
+
+
+    })
+
     it('calculate geodesic', function () {
         var phi1 = 0;
         var lam1 = 0;
         var phi2 = 10 * Math.PI / 180;
         var lam2 = 10 * Math.PI / 180;
-        var n = 1000000;
+        var n = 1e9;
 
         d2 = gsl.vincentyBackward(phi1, phi2, lam2 - lam1);
         var step = d2[0] / n;
+        console.log("step:", step);
         var fwdAz = d2[1];
         var area = 0;
         var area2 = 0;
+        var area3 = 0;
         var lamA = lam1 * 180 / Math.PI;
         var phiA = phi1 * 180 / Math.PI;
+        var darea = 0;
+        var maxA = 0;
 
         for (var k = 0; k < n; k++) {
             d = gsl.vincentyForward(phi1, lam1, fwdAz, step * (k + 1));
             var phiB = d[0] * 180 / Math.PI;
             var lamB = d[1] * 180 / Math.PI;
-           // console.log(d[0] * 180 / Math.PI, d[1] * 180 / Math.PI);
-            area += gsl.extentArea([lamA, 0, lamB, phiB]);
-            area2 += gsl.extentArea([lamA, 0, lamB, phiA]);
+            // console.log(d[0] * 180 / Math.PI, d[1] * 180 / Math.PI);
+            A1 = gsl.extentArea([lamA, 0, lamB, phiB]);
+            A2 = gsl.extentArea([lamA, 0, lamB, phiA]);
+            if (A2 > A1) {
+                area += A1;
+                area2 += A2;
+                darea = A2 - A1;
+                maxA = A2;
+            } else {
+                area += A2;
+                area2 += A1;
+                darea = A1 - A2;
+                maxA = A1;
+            }
+            var a = 6378137;
+            var b = 6356752.3142;
+            var acosA2 = Math.pow(a * Math.cos(phiA), 2);
+            var bsinA2 = Math.pow(b * Math.sin(phiA), 2);
+            var NA = Math.pow(a, 2) / Math.sqrt(acosA2 + bsinA2);
+            var acosB2 = Math.pow(a * Math.cos(phiB), 2);
+            var bsinB2 = Math.pow(b * Math.sin(phiB), 2);
+            var NB = Math.pow(a, 2) / Math.sqrt(acosB2 + bsinB2);
+            area3 += maxA + darea * NA * Math.cos(phiA) / (NA * Math.cos(phiA) + NB * Math.cos(phiB))
+
             lamA = lamB;
             phiA = phiB;
         }
-        //  122473224427.63501 10
+        //  618642575838.4127  1e8
+        //  618642564811.0323  1e9
         console.log('Area =', area);
+        console.log('Area3 =', area3);
         console.log('Area2 =', area2);
         console.log('delta Area =', area - area2);
         //
@@ -86,7 +176,8 @@ describe('polygonArea', function () {
         // var revAz2 = d2[2] * 180 / Math.PI;
         // console.log(revAz2);
     });
-});
+})
+;
 describe('extentArea', function () {
     it('calculate extent area', function () {
         assert.equal(gsl.extentArea([-22, -32, 50, 36]), 5.6835331379361180e+13);

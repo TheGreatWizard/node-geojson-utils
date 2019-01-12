@@ -1,6 +1,8 @@
+var prl = require('./privatelib');
 var geojsonlib = function () {
 
 };
+
 
 geojsonlib.validate = function (geometry) {
     if (geometry.type === undefined) return false;
@@ -40,6 +42,61 @@ geojsonlib.extentArea = function (extent) {
     return Math.round(p * 1000) / 1000;
 };
 
+/**
+ * returns the area under edge(a geodesic) and parallel defined by the given latitude value
+ */
+geojsonlib.areaUnderEdge = function (edge, latitude = 0, precision = 1000000) {
+    var areaUnderGeodesic = function (phi0, phi1, lam1, phi2, lam2, alpha1, l, p) {
+        //console.log((lam2 - lam1) * 180 / Math.PI);
+        var a = 6378137;
+        var b = 6356752.3142;
+        var maxArea = prl.extentArea([lam1, phi0, lam2, phi2]);
+        var minArea = prl.extentArea([lam1, phi0, lam2, phi1]);
+        if (maxArea < minArea) {
+            throw new Error('calculation error area');
+        }
+        if (lam2 < lam1) {
+            throw new Error('calculation error lam');
+        }
+        var deltaArea = maxArea - minArea;
+        //(deltaArea / 3 < p) ||
+        if (
+            ( (lam2 - lam1) < precision * Math.PI / 180)) {
+            //var bestArea = (maxArea + minArea) / 2;
+
+            var acosA2 = Math.pow(a * Math.cos(phi1), 2);
+            var bsinA2 = Math.pow(b * Math.sin(phi1), 2);
+            var NA = Math.pow(a, 2) / Math.sqrt(acosA2 + bsinA2);
+            var acosB2 = Math.pow(a * Math.cos(phi2), 2);
+            var bsinB2 = Math.pow(b * Math.sin(phi2), 2);
+            var NB = Math.pow(a, 2) / Math.sqrt(acosB2 + bsinB2);
+            var bestArea = minArea + deltaArea * NA * Math.cos(phi1) / (NA * Math.cos(phi1) + NB * Math.cos(phi2));
+
+
+            return bestArea;
+        }
+        else {
+            d = prl.vincentyForward(phi1, lam1, alpha1, l / 2);
+            var phiM = d[0];
+            var lamM = d[1];
+            var alpha2 = d[2];
+            if (!((phi1 < phiM) && (phiM < phi2))) {
+                throw new Error('calculation error');
+            }
+            var A1 = areaUnderGeodesic(phi0, phi1, lam1, phiM, lamM, alpha1, l / 2, p );
+            var A2 = areaUnderGeodesic(phi0, phiM, lamM, phi2, lam2, alpha2, l / 2, p );
+            return A1 + A2;
+        }
+    };
+    var phi1 = edge[0][1] * Math.PI / 180;
+    var lam1 = edge[0][0] * Math.PI / 180;
+    var phi2 = edge[1][1] * Math.PI / 180;
+    var lam2 = edge[1][0] * Math.PI / 180;
+    var vb = prl.vincentyBackward(phi1, phi2, lam2 - lam1);
+    return areaUnderGeodesic(latitude, phi1, lam1, phi2, lam2, vb[1], vb[0], precision);
+}
+
+
 geojsonlib.polygonArea = function (polygon) {
     throw new Error('method is not implemented');
 };
@@ -61,87 +118,6 @@ geojsonlib.lineStringLength = function (lineString) {
     }
     return Math.round(s * 1000) / 1000;
 };
-
-// distance - from coords
-geojsonlib.vincentyBackward = function(phi1, phi2, L) {
-    var a = 6378137;
-    var b = 6356752.3142;
-    var f = 1 / 298.257223563;
-    var U1 = Math.atan((1 - f) * Math.tan(phi1));
-    var U2 = Math.atan((1 - f) * Math.tan(phi2));
-    var lambda = L;
-    var lambdat = 2 * Math.PI;
-    var sinU1 = Math.sin(U1), cosU1 = Math.cos(U1);
-    var sinU2 = Math.sin(U2), cosU2 = Math.cos(U2);
-
-    var iterLimit = 20;
-    while (Math.abs(lambda - lambdat) > 1e-12 && --iterLimit > 0) {
-        var sinLambda = Math.sin(lambda), cosLambda = Math.cos(lambda);
-        var sinSigma = Math.sqrt((cosU2 * sinLambda) * (cosU2 * sinLambda) +
-            (cosU1 * sinU2 - sinU1 * cosU2 * cosLambda) * (cosU1 * sinU2 - sinU1 * cosU2 * cosLambda));
-        if (sinSigma === 0) return 0;
-        var cosSigma = sinU1 * sinU2 + cosU1 * cosU2 * cosLambda;
-        var sigma = Math.atan2(sinSigma, cosSigma);
-        var sinAlpha = cosU1 * cosU2 * sinLambda / sinSigma;
-        var cosSqAlpha = 1 - sinAlpha * sinAlpha;
-        var cos2SigmaM = cosSigma - 2 * sinU1 * sinU2 / cosSqAlpha;
-        if (isNaN(cos2SigmaM)) cos2SigmaM = 0;
-        var C = f / 16 * cosSqAlpha * (4 + f * (4 - 3 * cosSqAlpha));
-        lambdat = lambda;
-        lambda = L + (1 - C) * f * sinAlpha *
-            (sigma + C * sinSigma * (cos2SigmaM + C * cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM)));
-    }
-    if (iterLimit === 0) return null;
-
-    var uSq = cosSqAlpha * (a * a - b * b) / (b * b);
-    var A = 1 + uSq / 16384 * (4096 + uSq * (-768 + uSq * (320 - 175 * uSq)));
-    var B = uSq / 1024 * (256 + uSq * (-128 + uSq * (74 - 47 * uSq)));
-    var deltaSigma = B * sinSigma * (cos2SigmaM + B / 4 * (cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM) -
-        B / 6 * cos2SigmaM * (-3 + 4 * sinSigma * sinSigma) * (-3 + 4 * cos2SigmaM * cos2SigmaM)));
-    var s = b * A * (sigma - deltaSigma);
-    var fwdAz = Math.atan2(cosU2 * Math.sin(lambda), cosU1 * sinU2 - sinU1 * cosU2 * Math.cos(lambda));
-    var revAz = Math.atan2(cosU1 * Math.sin(lambda), -sinU1 * cosU2 + cosU1 * sinU2 * Math.cos(lambda));
-    return [s, fwdAz, revAz];
-}
-
-geojsonlib.vincentyForward = function(phi1,lambda1, fwdAz, s) {
-    var a = 6378137;
-    var b = 6356752.3142;
-    var f = 1 / 298.257223563;
-
-    var sinfwdAz = Math.sin(fwdAz);
-    var cosfwdAz = Math.cos(fwdAz);
-
-    var tanU1 = (1 - f) * Math.tan(phi1), cosU1 = 1 / Math.sqrt((1 + tanU1 * tanU1)), sinU1 = tanU1 * cosU1;
-    var sigma1 = Math.atan2(tanU1, cosfwdAz);
-    var sinAlpha = cosU1 * sinfwdAz;
-    var cosSqAlpha = 1 - sinAlpha * sinAlpha;
-    var uSq = cosSqAlpha * (a * a - b * b) / (b * b);
-    var A = 1 + uSq / 16384 * (4096 + uSq * (-768 + uSq * (320 - 175 * uSq)));
-    var B = uSq / 1024 * (256 + uSq * (-128 + uSq * (74 - 47 * uSq)));
-
-    var Sigma = s / (b * A), Sigmat;
-    do {
-        var cos2SigmaM = Math.cos(2 * sigma1 + Sigma);
-        var sinSigma = Math.sin(Sigma);
-        var cosSigma = Math.cos(Sigma);
-        var DSigma = B * sinSigma * (cos2SigmaM + B / 4 * (cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM) -
-            B / 6 * cos2SigmaM * (-3 + 4 * sinSigma * sinSigma) * (-3 + 4 * cos2SigmaM * cos2SigmaM)));
-        Sigmat = Sigma;
-        Sigma = s / (b * A) + DSigma;
-    } while (Math.abs(Sigma - Sigmat) > 1e-12);
-
-    var tmp = sinU1 * sinSigma - cosU1 * cosSigma * cosfwdAz;
-    var phi2 = Math.atan2(sinU1 * cosSigma + cosU1 * sinSigma * cosfwdAz, (1 - f) * Math.sqrt(sinAlpha * sinAlpha + tmp * tmp));
-    var lambda = Math.atan2(sinSigma * sinfwdAz, cosU1 * cosSigma - sinU1 * sinSigma * cosfwdAz);
-    var C = f / 16 * cosSqAlpha * (4 + f * (4 - 3 * cosSqAlpha));
-    var L = lambda - (1 - C) * f * sinAlpha *
-        (Sigma + C * sinSigma * (cos2SigmaM + C * cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM)));
-    var lambda2 = (lambda1 + L + 3 * Math.PI) % (2 * Math.PI) - Math.PI;  // normalise to -180...+180
-
-    var revAz = Math.atan2(sinAlpha, -tmp);
-    return [phi2, lambda2, revAz];
-}
 
 geojsonlib.distanceCoordsToCoords = function (coordsA, coordsB) {
     // WGS-84 ellipsiod
