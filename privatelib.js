@@ -1,10 +1,9 @@
-
 var privatelib = function () {
 
 };
 
 
-privatelib.vincentyBackward = function(phi1, phi2, L) {
+privatelib.vincentyBackward = function (phi1, phi2, L) {
     var a = 6378137;
     var b = 6356752.3142;
     var f = 1 / 298.257223563;
@@ -45,7 +44,7 @@ privatelib.vincentyBackward = function(phi1, phi2, L) {
     return [s, fwdAz, revAz];
 }
 
-privatelib.vincentyForward = function(phi1,lambda1, fwdAz, s) {
+privatelib.vincentyForward = function (phi1, lambda1, fwdAz, s) {
     var a = 6378137;
     var b = 6356752.3142;
     var f = 1 / 298.257223563;
@@ -94,8 +93,8 @@ privatelib.extentArea = function (extent) {
     var phi2 = extent[3];
     var lam1 = extent[0];
     var lam2 = extent[2];
-    var p1 = Math.sin(phi1) / (1 - e2 * Math.sin(phi1) * Math.sin(phi1)) + Math.log((1 + e * Math.sin(phi1)) / (1 - e * Math.sin(phi1))) / (2 * e);
-    var p2 = Math.sin(phi2) / (1 - e2 * Math.sin(phi2) * Math.sin(phi2)) + Math.log((1 + e * Math.sin(phi2)) / (1 - e * Math.sin(phi2))) / (2 * e);
+    var p1 =   Math.sin(phi1) / (1 - e2 * Math.sin(phi1) * Math.sin(phi1)) + Math.log((1 + e * Math.sin(phi1)) / (1 - e * Math.sin(phi1))) / (2 * e);
+    var p2 =   Math.sin(phi2) / (1 - e2 * Math.sin(phi2) * Math.sin(phi2)) + Math.log((1 + e * Math.sin(phi2)) / (1 - e * Math.sin(phi2))) / (2 * e);
     var p = 0.5 * a * a * (1 - e2) * (lam2 - lam1) * (p2 - p1);
     return Math.round(p * 1000) / 1000;
 };

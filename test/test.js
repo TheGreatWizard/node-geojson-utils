@@ -1,4 +1,5 @@
-var assert = require('assert');
+var assert = require('chai').assert;
+var chai = require('chai');
 var gsl = require('../geojsonlib');
 var prl = require('../privatelib');
 describe('validate', function () {
@@ -45,20 +46,46 @@ describe('validate', function () {
     });
 
 });
-describe('polygonArea', function () {
-    it('calculate area', function () {
-        this.timeout(10000);
-        var precision = 10;
-        var correctArea = gsl.areaUnderEdge([[0, 30], [1, 31]], 0, 1e-8);
-        var pr = [0.1, 0.01, 0.001, 0.0001];
-        for (var k = 0; k < pr.length; k++) {
-            precision = pr[k];
-            var area = gsl.areaUnderEdge([[0, 30], [1, 31]], 0, precision);
-            console.log(precision, correctArea - area, area);
-            // assert.equal(Math.round(area / precision) * precision,
-            //     Math.round(6154925593 / precision) * precision);
-        }
+describe('calculate area under edge', function () {
+    it('as extent', function () {
+        var area_1 = gsl.extentArea([20, 30, 25, 40]);
+        var area_2 = gsl.areaUnderEdge([[20, 40], [25, 40]], 30, 0.00001);
+        assert.approximately(area_1, area_2,0.1);
+    });
 
+    it('as extent with negative', function () {
+        var area_1 = gsl.extentArea([-20, -30, 25, 40]);
+        var area_2 = gsl.areaUnderEdge([[-20, 40], [25, 40]], -30, 0.00001);
+        assert.approximately(area_1, area_2,0.1);
+    });
+
+
+    it('different direction', function () {
+        var area_1 = gsl.areaUnderEdge([[0, 45], [30, 46]], 10, 0.0001);
+        var area_2 = gsl.areaUnderEdge([[30, 46], [0, 45]], 10, 0.0001);
+        assert.notEqual(area_1, area_2);
+    });
+
+    it('under equator', function () {
+        var areaA = gsl.areaUnderEdge([[0, 5], [10, 10]], 0, 0.001);
+        var areaB = gsl.areaUnderEdge([[0, 0], [10, 0]], -5, 0.001);
+        var areaC = gsl.areaUnderEdge([[0, 5], [10, 10]], -5, 0.001);
+        assert.approximately(areaC, areaA + areaB, 1)
+    });
+
+    it('different direction2', function () {
+        //
+        // var precision = 10;
+
+        // var correctArea = gsl.areaUnderEdge([[0, phi], [dl, phi + dphi]], 0, 0.000001);
+        // var pr = [0.001];
+        // for (var k = 0; k < pr.length; k++) {
+        //     precision = pr[k] / dl;
+        //     var area = gsl.areaUnderEdge([[0, phi], [dl, phi + dphi]], 0, precision);
+        //     console.log(dl, precision, correctArea - area);
+        // }
+        // assert.equal(Math.round(area / precision) * precision,
+        //     Math.round(6154925593 / precision) * precision);
 
     });
     it('calculate recursive', function () {
@@ -179,8 +206,34 @@ describe('polygonArea', function () {
 })
 ;
 describe('extentArea', function () {
-    it('calculate extent area', function () {
+    it('with negative values', function () {
         assert.equal(gsl.extentArea([-22, -32, 50, 36]), 5.6835331379361180e+13);
+    });
+
+    it('same delta longitude', function () {
+        var area_1 = gsl.extentArea([22, 18, 30, 22]);
+        var area_2 = gsl.extentArea([32, 18, 40, 22]);
+        assert.equal(area_1, area_2);
+    });
+
+    it('same delta longitude -90', function () {
+        var area_1 = gsl.extentArea([22, 18, 30, 22]);
+        var area_2 = gsl.extentArea([85, 18, -87, 22]);
+        assert.equal(area_1, area_2);
+    });
+
+    it('sum latitude', function () {
+        var area_1 = gsl.extentArea([-22, -32, 50, 0]);
+        var area_2 = gsl.extentArea([-22, 0, 50, 36]);
+        var area_3 = gsl.extentArea([-22, -32, 50, 36]);
+        assert.equal(area_1 + area_2, area_3);
+    });
+
+    it('sum longitude', function () {
+        var area_1 = gsl.extentArea([-22, -32, 0, 36]);
+        var area_2 = gsl.extentArea([0, -32, 50, 36]);
+        var area_3 = gsl.extentArea([-22, -32, 50, 36]);
+        assert.approximately(area_1 + area_2, area_3,0.1);
     });
 });
 

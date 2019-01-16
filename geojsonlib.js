@@ -32,13 +32,19 @@ geojsonlib.extentArea = function (extent) {
     var f = 1 / 298.257223563;
     var e = 0.0818191908426215;
     var e2 = Math.pow(0.0818191908426215, 2);
+    var dlam = extent[2] - extent[0];
+    if (dlam < 0) {
+        dlam += 180;
+    }
+    dlam = dlam * 0.017453292519943295769236908;
+
+
     var phi1 = extent[1] * 0.017453292519943295769236908;
     var phi2 = extent[3] * 0.017453292519943295769236908;
-    var lam1 = extent[0] * 0.017453292519943295769236908;
-    var lam2 = extent[2] * 0.017453292519943295769236908;
-    var p1 = Math.sin(phi1) / (1 - e2 * Math.sin(phi1) * Math.sin(phi1)) + Math.log((1 + e * Math.sin(phi1)) / (1 - e * Math.sin(phi1))) / (2 * e);
-    var p2 = Math.sin(phi2) / (1 - e2 * Math.sin(phi2) * Math.sin(phi2)) + Math.log((1 + e * Math.sin(phi2)) / (1 - e * Math.sin(phi2))) / (2 * e);
-    var p = 0.5 * a * a * (1 - e2) * (lam2 - lam1) * (p2 - p1);
+    var p1 =  (Math.sin(phi1) / (1 - e2 * Math.sin(phi1) * Math.sin(phi1)) + Math.log((1 + e * Math.sin(phi1)) / (1 - e * Math.sin(phi1))) / (2 * e));
+    var p2 =   (Math.sin(phi2) / (1 - e2 * Math.sin(phi2) * Math.sin(phi2)) + Math.log((1 + e * Math.sin(phi2)) / (1 - e * Math.sin(phi2))) / (2 * e));
+
+    var p = 0.5 * a * a * (1 - e2) * dlam * (p2 - p1);
     return Math.round(p * 1000) / 1000;
 };
 
@@ -46,22 +52,44 @@ geojsonlib.extentArea = function (extent) {
  * returns the area under edge(a geodesic) and parallel defined by the given latitude value
  */
 geojsonlib.areaUnderEdge = function (edge, latitude = 0, precision = 1000000) {
+    var a = 6378137;
+    var b = 6356752.3142;
+
     var areaUnderGeodesic = function (phi0, phi1, lam1, phi2, lam2, alpha1, l, p) {
         //console.log((lam2 - lam1) * 180 / Math.PI);
-        var a = 6378137;
-        var b = 6356752.3142;
-        var maxArea = prl.extentArea([lam1, phi0, lam2, phi2]);
-        var minArea = prl.extentArea([lam1, phi0, lam2, phi1]);
+        if (lam1 === lam2) {
+            return 0;
+        } else if (lam1 > lam2) {
+            var h = lam1;
+            lam1 = lam2;
+            lam2 = h;
+            h = phi1;
+            phi1 = phi2;
+            phi2 = h;
+            d = prl.vincentyBackward(phi1, phi2, lam2 - lam1);
+            //   s, fwdAz, revAz
+            alpha1 = d[1];
+        }
+
+        var maxArea, minArea;
+        if (phi1 < phi2) {
+            maxArea = prl.extentArea([lam1, phi0, lam2, phi2]);
+            minArea = prl.extentArea([lam1, phi0, lam2, phi1]);
+        } else if (phi2 > phi1) {
+            minArea = prl.extentArea([lam1, phi0, lam2, phi2]);
+            maxArea = prl.extentArea([lam1, phi0, lam2, phi1]);
+        } else {
+            return prl.extentArea([lam1, phi0, lam2, phi1]);
+        }
+
         if (maxArea < minArea) {
             throw new Error('calculation error area');
         }
-        if (lam2 < lam1) {
-            throw new Error('calculation error lam');
-        }
+
         var deltaArea = maxArea - minArea;
-        //(deltaArea / 3 < p) ||
-        if (
-            ( (lam2 - lam1) < precision * Math.PI / 180)) {
+
+        if ((deltaArea / 2 < p) ||
+            ((lam2 - lam1) < precision * Math.PI / 180)) {
             //var bestArea = (maxArea + minArea) / 2;
 
             var acosA2 = Math.pow(a * Math.cos(phi1), 2);
@@ -80,11 +108,11 @@ geojsonlib.areaUnderEdge = function (edge, latitude = 0, precision = 1000000) {
             var phiM = d[0];
             var lamM = d[1];
             var alpha2 = d[2];
-            if (!((phi1 < phiM) && (phiM < phi2))) {
-                throw new Error('calculation error');
-            }
-            var A1 = areaUnderGeodesic(phi0, phi1, lam1, phiM, lamM, alpha1, l / 2, p );
-            var A2 = areaUnderGeodesic(phi0, phiM, lamM, phi2, lam2, alpha2, l / 2, p );
+            // if (!((phi1 < phiM) && (phiM < phi2))) {
+            //     throw new Error('calculation error');
+            // }
+            var A1 = areaUnderGeodesic(phi0, phi1, lam1, phiM, lamM, alpha1, l / 2, p);
+            var A2 = areaUnderGeodesic(phi0, phiM, lamM, phi2, lam2, alpha2, l / 2, p);
             return A1 + A2;
         }
     };
@@ -92,8 +120,10 @@ geojsonlib.areaUnderEdge = function (edge, latitude = 0, precision = 1000000) {
     var lam1 = edge[0][0] * Math.PI / 180;
     var phi2 = edge[1][1] * Math.PI / 180;
     var lam2 = edge[1][0] * Math.PI / 180;
+
+
     var vb = prl.vincentyBackward(phi1, phi2, lam2 - lam1);
-    return areaUnderGeodesic(latitude, phi1, lam1, phi2, lam2, vb[1], vb[0], precision);
+    return areaUnderGeodesic(latitude * Math.PI / 180, phi1, lam1, phi2, lam2, vb[1], vb[0], precision);
 }
 
 
